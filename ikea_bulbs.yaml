@@ -7,10 +7,12 @@ blueprint:
       name: button
       description: Ikea Button (E1766)
       selector:
-        entity:
-          domain:
-            - sensor
+        device:
           multiple: false
+          filter:
+            - integration: mqtt
+              manufacturer: IKEA
+              model: TRADFRI open/close remote
     cover:
       name: Cover
       description: Controlled Cover
@@ -22,20 +24,32 @@ blueprint:
 mode: restart
 max_exceeded: silent
 trigger:
-  - platform: state
-    entity_id: !input button
-    attribute: action
+  - id: button_close
+    domain: mqtt
+    device_id: !input button
+    type: action
+    subtype: "close"
+    trigger: device
+  - id: button_open
+    domain: mqtt
+    device_id: !input button
+    type: action
+    subtype: "open"
+    trigger: device
+  - id: button_stop
+    domain: mqtt
+    device_id: !input button
+    type: action
+    subtype: "stop"
+    trigger: device
 variables:
-  command: "{{ trigger.to_state.attributes.action }}"
-  cover_entity_id: "{{ cover.entity_id | first }}"
+  command: "{{ trigger.id }}"
+  cover_entity_id: "{{ cover.entity_id[0] }}"
   is_moving: "{{ states(cover_entity_id) in ['opening', 'closing'] }}"
-condition:
-  - condition: template
-    value_template: "{{ command != '' and command != 'unknown' }}"
 action:
   - choose:
       - conditions:
-          - "{{ command == 'close' }}"
+          - "{{ command == 'button_close' }}"
           - condition: template
             value_template: "{{ not is_moving }}"
         sequence:
@@ -43,13 +57,13 @@ action:
             target: !input cover
             data: {}
       - conditions:
-          - "{{ command == 'close' }}"
+          - "{{ command == 'button_close' }}"
         sequence:
           - service: cover.stop_cover
             target: !input cover
             data: {}
       - conditions:
-          - "{{ command == 'open' }}"
+          - "{{ command == 'button_open' }}"
           - condition: template
             value_template: "{{ not is_moving }}"
         sequence:
@@ -57,13 +71,13 @@ action:
             data: {}
             target: !input cover
       - conditions:
-          - "{{ command == 'open' }}"
+          - "{{ command == 'button_open' }}"
         sequence:
           - service: cover.stop_cover
             target: !input cover
             data: {}
       - conditions:
-          - "{{ command == 'stop' }}"
+          - "{{ command == 'button_stop' }}"
         sequence:
           - service: cover.stop_cover
             data: {}
