@@ -12,7 +12,6 @@ blueprint:
           filter:
             - integration: zigbee2mqtt
               manufacturer: IKEA
-              model: TRADFRI open/close remote
     cover:
       name: Cover
       description: Controlled Cover
