@@ -1,0 +1,70 @@
+blueprint:
+  name: Ikea up/down button (E1766) cover control
+  description: Control cover with IKEA Tradfri Open/Close Remote (E1766). Short presses fully open or close the cover, long presses open/close while held and stop upon release.
+  domain: automation
+  input:
+    button:
+      name: button
+      description: Ikea Button (E1766)
+      selector:
+        entity:
+          domain:
+            - sensor
+          multiple: false
+    cover:
+      name: Cover
+      description: Controlled Cover
+      selector:
+        target:
+          entity:
+            - domain:
+                - cover
+mode: restart
+max_exceeded: silent
+trigger:
+  - platform: state
+    entity_id: !input button
+    attribute: action
+variables:
+  command: "{{ trigger.to_state.attributes.action }}"
+  cover_entity_id: "{{ cover.entity_id | first }}"
+  is_moving: "{{ states(cover_entity_id) in ['opening', 'closing'] }}"
+condition:
+  - condition: template
+    value_template: "{{ command != '' and command != 'unknown' }}"
+action:
+  - choose:
+      - conditions:
+          - "{{ command == 'close' }}"
+          - condition: template
+            value_template: "{{ not is_moving }}"
+        sequence:
+          - service: cover.close_cover
+            target: !input cover
+            data: {}
+      - conditions:
+          - "{{ command == 'close' }}"
+        sequence:
+          - service: cover.stop_cover
+            target: !input cover
+            data: {}
+      - conditions:
+          - "{{ command == 'open' }}"
+          - condition: template
+            value_template: "{{ not is_moving }}"
+        sequence:
+          - service: cover.open_cover
+            data: {}
+            target: !input cover
+      - conditions:
+          - "{{ command == 'open' }}"
+        sequence:
+          - service: cover.stop_cover
+            target: !input cover
+            data: {}
+      - conditions:
+          - "{{ command == 'stop' }}"
+        sequence:
+          - service: cover.stop_cover
+            data: {}
+            target: !input cover
