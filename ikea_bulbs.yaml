@@ -10,7 +10,7 @@ blueprint:
         device:
           multiple: false
           filter:
-            - integration: mqtt
+            - integration: zigbee2mqtt
               manufacturer: IKEA
               model: TRADFRI open/close remote
     cover:
@@ -24,24 +24,24 @@ blueprint:
 mode: restart
 max_exceeded: silent
 trigger:
-  - id: button_close
-    domain: mqtt
+  - platform: device
+    domain: zigbee2mqtt
     device_id: !input button
     type: action
-    subtype: "close"
-    trigger: device
-  - id: button_open
-    domain: mqtt
+    subtype: close
+    id: button_close
+  - platform: device
+    domain: zigbee2mqtt
     device_id: !input button
     type: action
-    subtype: "open"
-    trigger: device
-  - id: button_stop
-    domain: mqtt
+    subtype: open
+    id: button_open
+  - platform: device
+    domain: zigbee2mqtt
     device_id: !input button
     type: action
-    subtype: "stop"
-    trigger: device
+    subtype: stop
+    id: button_stop
 variables:
   command: "{{ trigger.id }}"
   cover_entity_id: "{{ cover.entity_id[0] }}"
