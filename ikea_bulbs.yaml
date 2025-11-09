@@ -12,6 +12,7 @@ blueprint:
           filter:
             - integration: mqtt
               manufacturer: IKEA
+              model: TRADFRI open/close remote
     cover:
       name: Cover
       description: Controlled Cover
